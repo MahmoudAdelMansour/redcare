@@ -29,7 +29,8 @@ class User extends Authenticatable
         'employee_id',
         'status',
         'extension_number',
-        'joining_date'
+        'joining_date',
+        'role',
     ];
     public const STATUS_ACTIVE = [
         'active' => 'Active',
