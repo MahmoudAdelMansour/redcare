@@ -60,10 +60,25 @@ class DepartmentResource extends Resource
                             )
                             ->searchable(['name', 'email'])
 
-                            ->saveRelationshipsUsing(fn ($record, $state) =>
-                            User::where('department_id', $record->id)->update(['department_id' => null]) &&
-                            User::whereIn('id', $state)->update(['department_id' => $record->id])
-                            ),
+                            ->saveRelationshipsUsing(function ($record, $state) {
+                                // Assume $state contains the selected user IDs
+                                $selectedIds = $state; // Directly use the state as selectedIds
+                                // Add users in chunks
+                                User::whereIn('id', $selectedIds)
+                                    ->chunkById(1000, function ($users) use ($record) {
+                                        $ids = $users->pluck('id'); // Get the IDs in the current chunk
+                                        User::whereIn('id', $ids)
+                                            ->update(['department_id' => $record->id]); // Batch update for the chunk
+                                    });
+
+                                User::where('department_id', $record->id)
+                                    ->whereNotIn('id', $selectedIds)
+                                    ->chunkById(1000, function ($users) {
+                                        $ids = $users->pluck('id'); // Get the IDs in the current chunk
+                                        User::whereIn('id', $ids)
+                                            ->update(['department_id' => null]); // Batch update for the chunk
+                                    });
+                            })
                     ]),
 
                 // Assign shifts
@@ -127,4 +142,13 @@ class DepartmentResource extends Resource
     {
         return ['name'];
     }
+
+    public static function canAccess(): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+
 }

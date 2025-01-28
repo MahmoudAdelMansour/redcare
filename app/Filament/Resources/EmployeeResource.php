@@ -6,6 +6,7 @@ use App\Filament\Resources\EmployeeResource\Pages;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -20,12 +21,16 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static ?string $navigationLabel = "Employees";
     protected static ?string $slug = 'employees';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
     public static function form(Form $form): Form
     {
+        $user = auth()->user();
+//dd($user->role);
         return $form
             ->schema([
                 TextInput::make('name')
@@ -38,7 +43,12 @@ class EmployeeResource extends Resource
                     ->label('Email Verified Date'),
 
                 TextInput::make('password')
-                    ->required(),
+                    ->label(__('label.password'))
+                    ->password()
+                    ->minLength(8)
+                    ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
+                    ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
+                    ->dehydrated(fn ($state) => filled($state)),
 
                 Placeholder::make('created_at')
                     ->label('Created Date')
@@ -52,14 +62,24 @@ class EmployeeResource extends Resource
 
                 TextInput::make('job_description'),
 
-                TextInput::make('employee_id'),
+                TextInput::make('employee_id')
+                    ->visible(fn () => $user && ($user->role !== 'employee')),
 
-                TextInput::make('department_id')
-                    ->integer(),
+                Select::make('department_id')
+                    ->relationship('department', 'name')
+                    ->visible(fn () => $user && ($user->role !== 'employee')),
 
                 TextInput::make('status'),
 
                 TextInput::make('extension_number'),
+
+                Select::make('role')
+                    ->options([
+                        'Admin' => 'Admin',
+                        'manager' => 'Manager',
+                        'employee' => 'Employee',
+                    ])
+                    ->visible(fn () => $user && ($user->role !== 'employee')),
             ]);
     }
 
@@ -85,11 +105,13 @@ class EmployeeResource extends Resource
 
                 TextColumn::make('employee_id'),
 
-                TextColumn::make('department_id'),
+                TextColumn::make('department.name'),
 
                 TextColumn::make('status'),
 
                 TextColumn::make('extension_number'),
+
+                TextColumn::make('role')
             ])
             ->filters([
                 //
@@ -112,6 +134,27 @@ class EmployeeResource extends Resource
             'create' => Pages\CreateEmployee::route('/create'),
             'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
+    }
+
+    public static function getLabel(): ?string
+    {
+        $user = auth()->user();
+        if ($user && $user->role == 'employee') {
+            return ('My Profile');
+        }
+        return ('employees');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = auth()->user();
+
+        if ($user->role === 'employee') {
+            return static::getModel()::query()->where('id', $user->id);
+        } else {
+            return static::getModel()::query();
+
+        }
     }
 
     public static function getGloballySearchableAttributes(): array

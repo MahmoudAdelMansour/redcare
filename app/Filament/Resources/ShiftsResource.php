@@ -135,4 +135,12 @@ class ShiftsResource extends Resource
 
         return $details;
     }
+
+    public static function canAccess(): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
 }
