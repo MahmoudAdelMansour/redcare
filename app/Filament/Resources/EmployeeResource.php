@@ -3,19 +3,26 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeResource\Pages;
+use App\Models\File;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextColumn\TextColumnSize;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class EmployeeResource extends Resource
 {
@@ -24,7 +31,7 @@ class EmployeeResource extends Resource
     protected static ?string $navigationLabel = "Employees";
     protected static ?string $slug = 'employees';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Employee Management';
 
 
     public static function form(Form $form): Form
@@ -33,22 +40,70 @@ class EmployeeResource extends Resource
 //dd($user->role);
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->required(),
+                Section::make('Basic Info')
+                    ->schema([
+                        TextInput::make('name')
+                            ->required(),
 
-                TextInput::make('email')
-                    ->required(),
+                        TextInput::make('email')
+                            ->required(),
+                        TextInput::make('password')
+                            ->label('Password')
+                            ->password()
+                            ->minLength(8)
+                            ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
+                            ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
+                            ->dehydrated(fn ($state) => filled($state)),
+                        FileUpload::make('avatar')
+                            ->label('Document Image')
+                            ->disk('public')
+                            ->openable()
+                            ->columnSpanFull(),
 
-                DatePicker::make('email_verified_at')
-                    ->label('Email Verified Date'),
+                    ]),
+                Section::make('Job Info')
+                    ->schema([
 
-                TextInput::make('password')
-                    ->label(__('label.password'))
-                    ->password()
-                    ->minLength(8)
-                    ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
-                    ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
-                    ->dehydrated(fn ($state) => filled($state)),
+                        TextInput::make('job_title'),
+
+                        TextInput::make('job_description'),
+
+                        TextInput::make('employee_id')
+                            ->visible(fn () => $user && ($user->role !== 'employee')),
+                        TextInput::make('extension_number'),
+
+                        Select::make('department_id')
+                            ->relationship('department', 'name')
+                            ->visible(fn () => $user && ($user->role !== 'employee')),
+
+                        Select::make('status')
+                            ->options(User::STATUS_ACTIVE)
+                            ->visible(fn () => $user && ($user->role !== 'employee'))
+                        ,
+                        Select::make('shift_id')
+                            ->relationship('shift', 'name')
+                            ->preload()
+                            ->required()
+                            ->label('Shift')
+                            ->searchable()
+                            ->visible(fn () => $user && ($user->role !== 'employee'))
+                        ->columnSpanFull()
+                        ,
+
+
+                        ])
+                     ->columns(2),
+                Section::make('System Info')
+                    ->schema([
+
+                        Select::make('role')
+                            ->options(
+                                User::ROLES
+                            )
+                            ->visible(fn () => $user && ($user->role !== 'employee')),
+                        ]),
+
+
 
                 Placeholder::make('created_at')
                     ->label('Created Date')
@@ -58,28 +113,6 @@ class EmployeeResource extends Resource
                     ->label('Last Modified Date')
                     ->content(fn(?User $record): string => $record?->updated_at?->diffForHumans() ?? '-'),
 
-                TextInput::make('job_title'),
-
-                TextInput::make('job_description'),
-
-                TextInput::make('employee_id')
-                    ->visible(fn () => $user && ($user->role !== 'employee')),
-
-                Select::make('department_id')
-                    ->relationship('department', 'name')
-                    ->visible(fn () => $user && ($user->role !== 'employee')),
-
-                TextInput::make('status'),
-
-                TextInput::make('extension_number'),
-
-                Select::make('role')
-                    ->options([
-                        'Admin' => 'Admin',
-                        'manager' => 'Manager',
-                        'employee' => 'Employee',
-                    ])
-                    ->visible(fn () => $user && ($user->role !== 'employee')),
             ]);
     }
 
@@ -89,29 +122,52 @@ class EmployeeResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    //job description
+                ->description(
+                    //str limit 70
+                    fn (User $record) => Str::limit($record->job_description, 70)
+                    )
+                ,
 
                 TextColumn::make('email')
                     ->searchable()
+                    ->copyable()
+                    ->copyMessage('Email copied')
                     ->sortable(),
 
-                TextColumn::make('email_verified_at')
-                    ->label('Email Verified Date')
-                    ->date(),
-
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state):string => match ($state) {
+                        'Active' => 'success',
+                        'active' => 'success',
+                        'On Leave' => 'warning',
+                        'Resigned' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('role')
+                ->state(
+                    fn (User $record) =>  User::ROLES[$record->role ?? 'undefined']
+                ),
+                TextColumn::make('department.name')
+                ->weight(FontWeight::Bold)
+                ->badge()
+                ->color('info')
+                ,
+                SelectColumn::make('shift_id')
+                    ->label('Shift')
+                    ->options(
+                        \App\Models\Shift::all()->pluck('name', 'id')
+                    )
+                    ->visible(fn () => auth()->user()->role !== 'employee'),
                 TextColumn::make('job_title'),
-
-                TextColumn::make('job_description'),
-
                 TextColumn::make('employee_id'),
 
-                TextColumn::make('department.name'),
 
-                TextColumn::make('status'),
 
                 TextColumn::make('extension_number'),
 
-                TextColumn::make('role')
+
             ])
             ->filters([
                 //

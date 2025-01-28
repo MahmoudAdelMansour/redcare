@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Shift extends Model
@@ -14,13 +15,12 @@ class Shift extends Model
         'name',
         'start_time',
         'end_time',
-        'department_id',
         'status',
     ];
 
-    public function department(): BelongsTo
+    public function users(): HasMany
     {
-        return $this->belongsTo(Department::class);
+        return $this->hasMany(User::class, 'shift_id');
     }
 
     protected function casts(): array
@@ -31,4 +31,5 @@ class Shift extends Model
             'status' => 'boolean',
         ];
     }
+
 }

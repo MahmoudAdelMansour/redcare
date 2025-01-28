@@ -18,8 +18,19 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    public const STATUS = [
+        'active' => 'Active',
+        'on_leave' => 'On Leave',
+        'resigned' => 'Resigned',
+    ];
+    public const ROLES = [
+        'admin' => 'Admin',
+        'employee' => 'Employee',
+        'manager' => 'Manager',
+    ];
     protected $fillable = [
         'name',
+        'avatar',
         'email',
         'password',
         'email_verified_at',
@@ -31,6 +42,8 @@ class User extends Authenticatable
         'extension_number',
         'joining_date',
         'role',
+        'department_id',
+        'shift_id',
     ];
     public const STATUS_ACTIVE = [
         'active' => 'Active',
@@ -64,6 +77,11 @@ class User extends Authenticatable
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
 
 }

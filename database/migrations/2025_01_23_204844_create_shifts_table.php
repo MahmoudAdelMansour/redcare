@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->timestamp('start_time')->nullable();
+//            $table->timestamp('start_time')->nullable();
             $table->timestamp('end_time')->nullable();
             $table->foreignId('department_id')->nullable();
             $table->boolean('status')->nullable();

@@ -20,6 +20,7 @@ use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -32,7 +33,7 @@ class DepartmentResource extends Resource
 
     protected static ?string $slug = 'departments';
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $navigationGroup = 'Employee Management';
 
     public static function form(Form $form): Form
     {
@@ -100,8 +101,10 @@ class DepartmentResource extends Resource
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-
                 TextColumn::make('description'),
+                ImageColumn::make('users.avatar')
+                    ->circular()
+                    ->stacked()
             ])
             ->filters([
                 TrashedFilter::make(),

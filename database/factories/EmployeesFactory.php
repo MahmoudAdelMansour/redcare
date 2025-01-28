@@ -25,8 +25,10 @@ class EmployeesFactory extends Factory
             'job_description' => $this->faker->text(),
             'employee_id' => $this->faker->word(),
             'department_id' => $this->faker->randomNumber(1,3),
-            'status' => $this->faker->word(),
+            'status' => $this->faker->randomElement(User::STATUS),
             'extension_number' => $this->faker->word(),
+            'role' => $this->faker->randomElement(User::ROLES),
+
         ];
     }
 }

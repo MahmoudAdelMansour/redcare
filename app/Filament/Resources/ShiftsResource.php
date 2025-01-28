@@ -3,12 +3,17 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ShiftsResource\Pages;
+use App\Models\Department;
 use App\Models\Shift;
+use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
@@ -19,7 +24,9 @@ use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,23 +39,64 @@ class ShiftsResource extends Resource
 
     protected static ?string $slug = 'shifts';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Employee Management';
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('name'),
+                Section::make('Basic Info')
+            ->schema([
+                TextInput::make('name')
+                ->columnSpanFull()
+                ,
 
-                DatePicker::make('start_time'),
+                TimePicker::make('start_time'),
 
-                DatePicker::make('end_time'),
+                TimePicker::make('end_time'),
+            ])->columns(2),
 
-                Select::make('department_id')
-                    ->relationship('department', 'name')
-                    ->searchable(),
 
-                Checkbox::make('status'),
+                Section::make('Employees')
+                    ->columns(1)
+                    ->icon('heroicon-m-user-group')
+
+                    ->heading( fn(? Shift $record): string => 'Employees '. $record?->users->count() ?? '-')
+                    ->schema([
+                        Select::make('users')
+                            ->multiple()
+                            ->preload()
+                            ->loadStateFromRelationshipsUsing(
+                                fn(Select $select, Shift $record, $state) => filled($state) ?:
+                                    $select->state($record->users->pluck('id'))
+                            )
+                            ->options(
+                                User::all()->pluck('name', 'id')
+                            )
+                            ->searchable(['name', 'email'])
+
+                            ->saveRelationshipsUsing(function ($record, $state) {
+                                // Assume $state contains the selected user IDs
+                                $selectedIds = $state; // Directly use the state as selectedIds
+                                // Add users in chunks
+                                User::whereIn('id', $selectedIds)
+                                    ->chunkById(1000, function ($users) use ($record) {
+                                        $ids = $users->pluck('id'); // Get the IDs in the current chunk
+                                        User::whereIn('id', $ids)
+                                            ->update(['shift_id' => $record->id]); // Batch update for the chunk
+                                    });
+
+                                User::where('shift_id', $record->id)
+                                    ->whereNotIn('id', $selectedIds)
+                                    ->chunkById(1000, function ($users) {
+                                        $ids = $users->pluck('id'); // Get the IDs in the current chunk
+                                        User::whereIn('id', $ids)
+                                            ->update(['shift_id' => null]); // Batch update for the chunk
+                                    });
+                            })
+                    ]),
+                Toggle::make('status'),
 
                 Placeholder::make('created_at')
                     ->label('Created Date')
@@ -69,16 +117,18 @@ class ShiftsResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('start_time')
-                    ->date(),
+                    ->time('h:i A')
+                ,
 
                 TextColumn::make('end_time')
-                    ->date(),
+                    ->time('h:i A'),
 
-                TextColumn::make('department.name')
-                    ->searchable()
-                    ->sortable(),
+                ImageColumn::make('users.avatar')
+                    ->circular()
+                    ->stacked(),
 
-                TextColumn::make('status'),
+
+                ToggleColumn::make('status'),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -117,7 +167,7 @@ class ShiftsResource extends Resource
 
     public static function getGlobalSearchEloquentQuery(): Builder
     {
-        return parent::getGlobalSearchEloquentQuery()->with(['department']);
+        return parent::getGlobalSearchEloquentQuery()->with(['users']);
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -125,16 +175,7 @@ class ShiftsResource extends Resource
         return ['name', 'department.name'];
     }
 
-    public static function getGlobalSearchResultDetails(Model $record): array
-    {
-        $details = [];
 
-        if ($record->department) {
-            $details['Department'] = $record->department->name;
-        }
-
-        return $details;
-    }
 
     public static function canAccess(): bool
     {

@@ -26,7 +26,8 @@ class FileResource extends Resource
 {
     protected static ?string $model = File::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'System Management';
+    protected static ?string $navigationLabel = 'File System';
 
     public static function form(Form $form): Form
     {
@@ -37,15 +38,16 @@ class FileResource extends Resource
                 Hidden::make('user_id')
                     ->default($user->id),
 
+
+                TextInput::make('title')
+                ->label('File Name'),
+                TextInput::make('description'),
+
                 FileUpload::make('up_file')
                     ->label('Document Image')
                     ->disk('public')
-                    ->openable(),
-
-                TextInput::make('title'),
-
-                TextInput::make('description'),
-
+                    ->openable()
+                    ->columnSpanFull(),
 
             ]);
     }
@@ -64,20 +66,28 @@ class FileResource extends Resource
                                 ->prefix('Uploaded By ')
                         ->alignment('center'),
                         ImageColumn::make('up_file')
+                            ->width('100%')
                             ->height('200px')
-                            ->width('233px')
+                            ->extraImgAttributes(
+                                [
+                                    'style' => 'object-fit: cover; border-radius: 10px;',
+                                ]
+                            )
+                            ->stacked()
+
+                            ->alignment('center')
                             ->getStateUsing(function ($record) {
                                 $filePath = $record->up_file;
-
                                 $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                                 $extension = pathinfo($filePath, PATHINFO_EXTENSION);
 
                                 if (in_array(strtolower($extension), $imageExtensions)) {
                                     return $filePath;
                                 }
-
                                 return 'https://imgs.search.brave.com/sop3FFpXsaNyHE_cr3mMs9bkvhuN4y_U0P6Zytjq70U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMudmV4ZWxzLmNv/bS9tZWRpYS91c2Vy/cy8zLzEyODQ1Ny9p/c29sYXRlZC9wcmV2/aWV3LzQ2M2Q2MzU4/N2QwNTA1ODEyYjgz/Mjc5Yzk5ZjJmZTI3/LXByZXNjcmlwdGlv/bi1mb2xkZXItaWNv/bi5wbmc';
-                            }),
+                            })
+
+                        ,
                         TextColumn::make('title')
                             ->weight(FontWeight::SemiBold)
                             ->size(TextColumnSize::Large)
@@ -113,7 +123,10 @@ class FileResource extends Resource
                 Tables\Actions\EditAction::make()
                 ->badge()
                 ->badgeColor('primary')
-                ->color('info'),
+                ->color('info')
+                // if employee role can't edit
+                ->visible(fn() => auth()->user()->role !== 'employee')
+                ,
                 // Download ACtion ( url with download )
                 Tables\Actions\Action::make('Download')
                 ->url(
@@ -122,6 +135,9 @@ class FileResource extends Resource
                 ->icon('heroicon-o-arrow-down')
                 ->color('success')
                 ->openUrlInNewTab()
+                ->badge()
+                    ->badgeColor('primary')
+                    ->color('success')
                 ->extraAttributes([
                     'style' => 'display:flex;justify-content:center;align-items:center;position:absolute;right:15px;  ',
                     'download' => 'download',
@@ -145,7 +161,7 @@ class FileResource extends Resource
     {
         return [
             'index' => Pages\ListFiles::route('/'),
-            'create' => Pages\CreateFile::route('/create'),
+
         ];
     }
 
