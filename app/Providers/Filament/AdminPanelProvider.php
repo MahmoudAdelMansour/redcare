@@ -54,6 +54,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
             ])
             ->navigationGroups([
                 NavigationGroup::make()
@@ -62,6 +63,9 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('System Management')
                     ->icon('heroicon-o-folder'),
+            ])
+            ->plugins([
+                \Hasnayeen\Themes\ThemesPlugin::make()
             ])
             ->authMiddleware([
                 Authenticate::class,

@@ -5,12 +5,19 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DepartmentResource\Pages;
 use App\Models\Department;
 use App\Models\User;
+use Filament\Forms\Components\FileUpload;
+
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\Layout\Grid;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
@@ -21,7 +28,10 @@ use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextColumn\TextColumnSize;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,9 +50,39 @@ class DepartmentResource extends Resource
 
         return $form
             ->schema([
+                Section::make('Basic Data')
+            ->schema([
                 TextInput::make('name'),
-
                 TextInput::make('description'),
+                FileUpload::make('avatar')
+                    ->label('Department Image')
+                    ->disk('public')
+                    ->directory('departments')
+                    ->openable()
+                    ->columnSpanFull()
+                ,
+            ]),
+                Section::make('Additional Data')
+                    ->schema([
+                        ///        'code', 'user_id', 'goals', 'main_responsibilities'
+                        TextInput::make('code'),
+                        Select::make('user_id')
+                            ->options(
+                                User::all()->pluck('name', 'id')
+                            )
+                            ->label('Head of Department')
+                            ->searchable()
+                            ->placeholder('Select Head of Department')
+                            ->nullable(),
+
+                        Textarea::make('goals')
+                            ->label('Goals')
+                        ,
+                        Textarea::make('main_responsibilities')
+                            ->label('Main Responsibilities')
+                        ,
+                        ]),
+
                 // Assign users
                 Section::make('Employees')
                     ->columns(1)
@@ -98,29 +138,67 @@ class DepartmentResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('description'),
-                ImageColumn::make('users.avatar')
-                    ->circular()
-                    ->stacked()
+                Grid::make()
+                    ->columns(1)
+
+                    ->schema([
+
+                        ImageColumn::make('avatar')
+                            ->size(30)
+                            ->width('100%')
+                            ->height('150px')
+                            ->extraImgAttributes(
+                                [
+                                    'style' => 'object-fit: cover; border-radius: 10px;',
+                                ]
+                            )
+                            ->alignment('center')
+                        ,
+                        TextColumn::make('name')
+                            ->searchable()
+                            ->sortable()
+                            ->weight(FontWeight::SemiBold)
+                            ->size(TextColumnSize::Large)
+                            ->alignment('center')
+
+
+                        ,
+                        ImageColumn::make('users.avatar')
+                            ->circular()
+                            ->stacked()
+                            ->limit(4)
+                            ->alignment('center')
+                            ->alignment('center')
+
+                    ]),
+                        TextColumn::make('description')
+                            ->alignment('center')
+                        ,
+
+
+
             ])
+            ->searchable(true)
+            ->contentGrid(['md' => 2 , 'xl' => 3])
+
+            ->paginationPageOptions([9,18,27])
+            ->defaultSort('id', 'desc')
             ->filters([
                 TrashedFilter::make(),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
-            ])
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    RestoreAction::make(),
+                    ForceDeleteAction::make(),
+                    ViewAction::make()
+                    ])
+
+
+            ],position: ActionsPosition::BeforeColumns)
             ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 
