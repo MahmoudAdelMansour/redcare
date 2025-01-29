@@ -27,7 +27,7 @@ class EmployeesFactory extends Factory
             'department_id' => $this->faker->randomNumber(1,3),
             'status' => $this->faker->randomElement(User::STATUS),
             'extension_number' => $this->faker->word(),
-            'role' => $this->faker->randomElement(User::ROLES),
+            'role' => $this->faker->randomElement(array_keys(User::ROLES)),
 
         ];
     }

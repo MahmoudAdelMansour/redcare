@@ -85,9 +85,7 @@ class FileResource extends Resource
                                     return $filePath;
                                 }
                                 return 'https://imgs.search.brave.com/sop3FFpXsaNyHE_cr3mMs9bkvhuN4y_U0P6Zytjq70U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMudmV4ZWxzLmNv/bS9tZWRpYS91c2Vy/cy8zLzEyODQ1Ny9p/c29sYXRlZC9wcmV2/aWV3LzQ2M2Q2MzU4/N2QwNTA1ODEyYjgz/Mjc5Yzk5ZjJmZTI3/LXByZXNjcmlwdGlv/bi1mb2xkZXItaWNv/bi5wbmc';
-                            })
-
-                        ,
+                            }),
                         TextColumn::make('title')
                             ->weight(FontWeight::SemiBold)
                             ->size(TextColumnSize::Large)

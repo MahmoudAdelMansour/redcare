@@ -16,7 +16,11 @@ class Department extends Model
         'name',
         'description',
         'avatar',
-        'code', 'user_id', 'goals', 'main_responsibilities'
+        'code',
+        'user_id',
+        'goals',
+        'main_responsibilities',
+
     ];
 
     public function users(): HasMany
@@ -28,5 +32,11 @@ class Department extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function policies(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Policies::class, 'policy_department');
+    }
+
 
 }
