@@ -113,13 +113,13 @@ class PoliciesResource extends Resource
                 TextColumn::make('details'),
                 TextColumn::make('link'),
                 ImageColumn::make('attachment')
-                    ->width('80%')
-                    ->height('80%')
-                    ->extraImgAttributes(
-                        [
-                            'style' => 'object-fit: cover; border-radius: 10px;',
-                        ]
-                    )
+//                    ->width('50%')
+//                    ->height('50%')
+//                    ->extraImgAttributes(
+//                        [
+//                            'style' => 'object-fit: cover; border-radius: 10px;',
+//                        ]
+//                    )
                     ->stacked()
                     ->alignment('center')
                     ->getStateUsing(function ($record) {
@@ -130,7 +130,7 @@ class PoliciesResource extends Resource
                         if (in_array(strtolower($extension), $imageExtensions)) {
                             return $filePath;
                         }
-                        return 'https://imgs.search.brave.com/sop3FFpXsaNyHE_cr3mMs9bkvhuN4y_U0P6Zytjq70U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMudmV4ZWxzLmNv/bS9tZWRpYS91c2Vy/cy8zLzEyODQ1Ny9p/c29sYXRlZC9wcmV2/aWV3LzQ2M2Q2MzU4/N2QwNTA1ODEyYjgz/Mjc5Yzk5ZjJmZTI3/LXByZXNjcmlwdGlv/bi1mb2xkZXItaWNv/bi5wbmc';
+                        return 'https://imgs.search.brave.com/XnZs0OSUPTIm7GR1SoOVW666qHxXrPiMyhAGatwQ444/rs:fit:500:0:0:0/g:ce/aHR0cDovL3d3dy5j/bGtlci5jb20vY2xp/cGFydHMvZi9ILzUv/YS9RL3kvdGV4dC1m/aWxlLWljb24tdGgu/cG5n';
                     }),
                 TextColumn::make('status'),
                 TextColumn::make('compliance'),
