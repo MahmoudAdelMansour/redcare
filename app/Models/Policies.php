@@ -19,6 +19,7 @@ class Policies extends Model
         'link',
         'attachment',
         'status',
+        'approval',
         'compliance',
         'notes',
         'user_id',

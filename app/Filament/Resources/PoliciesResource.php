@@ -79,11 +79,16 @@ class PoliciesResource extends Resource
                             ->label('Users')
                             ->relationship('user', 'name')
                     ]),
-                Select::make('departments')
-                    ->label('Departments')
-                    ->relationship('departments', 'name')
-                    ->multiple()
-                    ->preload(),
+                Section::make('Policy Officer')
+                    ->columns(1)
+                    ->icon('heroicon-m-building-office')
+                    ->schema([
+                        Select::make('departments')
+                            ->label('Departments')
+                            ->relationship('departments', 'name')
+                            ->multiple()
+                            ->preload()
+                    ]),
 
 
                 Placeholder::make('created_at')
