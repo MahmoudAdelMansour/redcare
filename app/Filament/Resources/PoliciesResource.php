@@ -30,7 +30,10 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\Filter;
+
 
 class PoliciesResource extends Resource
 {
@@ -39,38 +42,43 @@ class PoliciesResource extends Resource
     protected static ?string $slug = 'policies';
 
     protected static ?string $navigationGroup = 'Employee Management';
+    protected static ?string $recordTitleAttribute = 'policy_name';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('policy_name'),
-                TextInput::make('police_number')
-                    ->numeric(),
-                Textarea::make('description'),
-                TextInput::make('purpose'),
-                TextInput::make('version'),
-                Textarea::make('details'),
-                TextInput::make('link')
-                    ->label('Attachment Link'),
-                FileUpload::make('attachment')
-                    ->label('Attachment File')
-                    ->disk('public')
-                    ->openable()
-                    ,
-                Select::make('status')
-                    ->options([
-                        'activity' => 'Activity',
-                        'disabled' => 'Disabled',
-                        'under_review' => 'Under review',
-                    ]),
-                Textarea::make('compliance'),
-                Select::make('approval')
-                ->options([
-                    'approved' => 'Approved',
-                    'rejected' => 'Rejected',
-                ]),
-                Textarea::make('notes'),
+                Section::make('Policy Data')
+                    ->schema([
+                    TextInput::make('policy_name'),
+                    TextInput::make('police_number')
+                        ->numeric(),
+                    Textarea::make('description'),
+                    ])
+                ->icon('heroicon-o-information-circle')
+                ,
+                Section::make('Attachments')
+                    ->schema([
+                        TextInput::make('link')
+                            ->label('Attachment Link'),
+                        FileUpload::make('attachment')
+                            ->label('Attachment File')
+                            ->disk('public')
+                            ->openable()
+                        ,
+                        ])
+                    ->icon('heroicon-o-folder-open')
+                ,
+                Section::make('Policy Details')
+                    ->schema([
+                        TextInput::make('purpose'),
+                        TextInput::make('version'),
+                        Textarea::make('details'),
+                        Textarea::make('compliance'),
+                    ])
+                    ->icon('heroicon-o-document-text'),
+                Section::make('Assignation')
+            ->schema([
                 Section::make('Policy Officer')
                     ->columns(1)
                     ->icon('heroicon-m-user-group')
@@ -89,6 +97,34 @@ class PoliciesResource extends Resource
                             ->multiple()
                             ->preload()
                     ]),
+                    ])
+                ->icon('heroicon-o-users')
+                ->columns(2)
+                ,
+                Section::make('Status')
+                    ->schema([
+                        Select::make('status')
+                            ->options([
+                                'activity' => 'Activity',
+                                'disabled' => 'Disabled',
+                                'under_review' => 'Under review',
+                            ]),
+
+                        Select::make('approval')
+                            ->options([
+                                'approved' => 'Approved',
+                                'rejected' => 'Rejected',
+                            ]),
+                        ])
+                    ->icon('heroicon-o-check-circle')
+                    ->columns(2)
+                ,
+
+
+                Textarea::make('notes')
+                ->columnSpanFull()
+                ,
+
 
 
                 Placeholder::make('created_at')
@@ -105,57 +141,75 @@ class PoliciesResource extends Resource
     {
         return $table
             ->columns([
+
                 TextColumn::make('policy_name'),
                 TextColumn::make('police_number'),
-                TextColumn::make('description'),
-                TextColumn::make('purpose'),
-                TextColumn::make('version'),
-                TextColumn::make('details'),
-                TextColumn::make('link'),
+                TextColumn::make('description')
+                ->words(4),
+                ImageColumn::make('user.avatar')
+                    ->circular()
+                ->tooltip(fn($record) => $record->user->name)
+                ,
+                ImageColumn::make('departments.avatar')
+                    ->label('Departments')
+                    ->circular()
+                    ->limit(3)
+                    ->limitedRemainingText()
+                    ->stacked()
+                ->default('https://icon-library.com/images/none-icon/none-icon-0.jpg')
+                ,
                 ImageColumn::make('attachment')
-//                    ->width('50%')
-//                    ->height('50%')
-//                    ->extraImgAttributes(
-//                        [
-//                            'style' => 'object-fit: cover; border-radius: 10px;',
-//                        ]
-//                    )
                     ->stacked()
                     ->alignment('center')
                     ->getStateUsing(function ($record) {
-                        $filePath = $record->attachment;
-                        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                        return $record->attachment ? 'https://imgs.search.brave.com/XnZs0OSUPTIm7GR1SoOVW666qHxXrPiMyhAGatwQ444/rs:fit:500:0:0:0/g:ce/aHR0cDovL3d3dy5j/bGtlci5jb20vY2xp/cGFydHMvZi9ILzUv/YS9RL3kvdGV4dC1m/aWxlLWljb24tdGgu/cG5n'
+                            :
+                            'https://icon-library.com/images/none-icon/none-icon-0.jpg';
+                    })
+                    ->url(fn($record) => asset('storage/'.$record->attachment))
+                    ->openUrlInNewTab()
+                    ->extraAttributes([
+                        'download'
+                    ])
 
-                        if (in_array(strtolower($extension), $imageExtensions)) {
-                            return $filePath;
-                        }
-                        return 'https://imgs.search.brave.com/XnZs0OSUPTIm7GR1SoOVW666qHxXrPiMyhAGatwQ444/rs:fit:500:0:0:0/g:ce/aHR0cDovL3d3dy5j/bGtlci5jb20vY2xp/cGFydHMvZi9ILzUv/YS9RL3kvdGV4dC1m/aWxlLWljb24tdGgu/cG5n';
-                    }),
-                TextColumn::make('status'),
-                TextColumn::make('compliance'),
-                TextColumn::make('approval'),
-                TextColumn::make('notes'),
-                TextColumn::make('user.name')
-                    ->label('User'),
-
-                ImageColumn::make('departments.avatar')
-                    ->label('Departments')
-                    ->sortable()
-                    ->circular()
-                ->stacked()
                 ,
+                TextColumn::make('link')
+                    ->label('Link')
+                    ->icon('heroicon-o-link')
+                    ->url(fn($record) => $record->link)
+                    ->formatStateUsing(fn($state) => 'Open Link') // Change visible text
+                    ->color('primary')
+                ,
+
+                Tables\Columns\ToggleColumn::make('status'),
+                Tables\Columns\ToggleColumn::make('approval'),
                 TextColumn::make('created_at'),
-                TextColumn::make('updated_at'),
+
             ])
             ->filters([
-                //
+                Filter::make('is_active')
+                    ->query(fn (Builder $query):Builder => $query->where('status', true))
+                ->label('Active Policies'),
+                // Has Attachment
+                Filter::make('has_attachment')
+                    ->query(fn (Builder $query):Builder => $query->whereNotNull('attachment'))
+                ->label('Has Attachment'),
+
+                //Has Link
+                Filter::make('has_link')
+                    ->query(fn (Builder $query):Builder => $query->whereNotNull('link'))
+                ->label('Has Link'),
+
             ])
+            ->searchable()
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    RestoreAction::make(),
+                    ForceDeleteAction::make(),
+                ])
+
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -181,4 +235,17 @@ class PoliciesResource extends Resource
             'edit' => Pages\EditPolicies::route('/{record}/edit'),
         ];
     }
+    public static function getGloballySearchableAttributes(): array
+    {
+    return [
+        'policy_name',
+        'policy_number',
+        'description',
+        'purpose',
+        'version',
+        'details',
+    ];
+    }
+
+
 }

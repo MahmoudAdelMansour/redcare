@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\EmployeeResource\Widgets\LatestEmployees;
+use App\Filament\Resources\PoliciesResource\Widgets\PolicyDepartmentChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -17,6 +19,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Joaopaulolndev\FilamentWorldClock\FilamentWorldClockPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -40,6 +43,10 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Widgets')
             ->widgets([
 
+                LatestEmployees::make(),
+                PolicyDepartmentChart::make()
+                ,
+
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -62,7 +69,21 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-folder'),
             ])
             ->plugins([
-                \Hasnayeen\Themes\ThemesPlugin::make()
+                \Hasnayeen\Themes\ThemesPlugin::make(),
+                FilamentWorldClockPlugin::make()
+                    ->timezones([
+
+                        'Africa/Cairo',
+                        'Asia/Riyadh',
+                        'Asia/Dubai',
+                    ])
+                    ->setTimeFormat('H:i') //Optional time format default is: 'H:i'
+                    ->shouldShowTitle(false) //Optional show title default is: true
+                    ->setTitle('Hours') //Optional title default is: 'World Clock'
+                    ->setDescription('Different description') //Optional description default is: 'Show hours around the world by timezone'
+                    ->setQuantityPerRow(1) //Optional quantity per row default is: 1
+                    ->setColumnSpan('full') //Optional column span default is: '1/2'
+                    ->setSort(8),
             ])
             ->authMiddleware([
                 Authenticate::class,

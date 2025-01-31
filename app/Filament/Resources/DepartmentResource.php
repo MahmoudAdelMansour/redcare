@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DepartmentResource\Pages;
 use App\Models\Department;
+use App\Models\Policies;
 use App\Models\User;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 
 use Filament\Forms\Components\Placeholder;
@@ -121,6 +123,23 @@ class DepartmentResource extends Resource
                                     });
                             })
                     ]),
+                Section::make('Policies')
+                    ->schema([
+                        CheckboxList::make('policies')
+                            ->relationship('policies', 'policy_name')
+
+                            ->descriptions(
+                                Policies::all()->pluck('description', 'id')
+                            )
+                            ->bulkToggleable()
+                        ->columns(3)
+                        ->searchable()
+
+
+                    ])
+                    ->icon('heroicon-o-document-text')
+                    ->heading('Policies'),
+
 
                 // Assign shifts
 
@@ -174,6 +193,19 @@ class DepartmentResource extends Resource
                         TextColumn::make('description')
                             ->alignment('center')
                         ,
+                        TextColumn::make('head.name')
+                            ->weight(FontWeight::SemiBold)
+                            ->color('primary')
+                            ->alignment('center')
+                        ,
+                    TextColumn::make('team_members')
+                        ->state(fn(Department $record) => $record?->users?->count())
+                        ->weight(FontWeight::SemiBold)
+                        ->suffix(' Member')
+                        ->color('info')
+                        ->badge()
+                        ->alignment('center'),
+
 
 
 

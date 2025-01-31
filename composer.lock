@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "301f455fe0e1a013c23dfa9e63b4e1fd",
+    "content-hash": "d76f451cf348395a89bea6f1acd3539f",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2153,6 +2153,81 @@
             "time": "2024-04-10T06:31:54+00:00"
         },
         {
+            "name": "joaopaulolndev/filament-world-clock",
+            "version": "v1.0.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/joaopaulolndev/filament-world-clock.git",
+                "reference": "f13d72d0fc13e23807512a9329c64193074e1fc1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/joaopaulolndev/filament-world-clock/zipball/f13d72d0fc13e23807512a9329c64193074e1fc1",
+                "reference": "f13d72d0fc13e23807512a9329c64193074e1fc1",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0",
+                "outhebox/blade-flags": "^1.5",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^7.9",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.1",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentWorldClock": "Joaopaulolndev\\FilamentWorldClock\\Facades\\FilamentWorldClock"
+                    },
+                    "providers": [
+                        "Joaopaulolndev\\FilamentWorldClock\\FilamentWorldClockServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Joaopaulolndev\\FilamentWorldClock\\": "src/",
+                    "Joaopaulolndev\\FilamentWorldClock\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "João Paulo Leite Nascimento",
+                    "email": "joaopauloln7@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Show hours around the world by timezone",
+            "homepage": "https://github.com/joaopaulolndev/filament-world-clock",
+            "keywords": [
+                "filament-world-clock",
+                "joaopaulolndev",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/joaopaulolndev/filament-world-clock/issues",
+                "source": "https://github.com/joaopaulolndev/filament-world-clock"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/joaopaulolndev",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-07-11T14:09:34+00:00"
+        },
+        {
             "name": "kirschbaum-development/eloquent-power-joins",
             "version": "4.0.1",
             "source": {
@@ -4069,6 +4144,74 @@
                 }
             ],
             "time": "2025-01-07T11:48:34+00:00"
+        },
+        {
+            "name": "outhebox/blade-flags",
+            "version": "1.5.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MohmmedAshraf/blade-flags.git",
+                "reference": "433a9b0c9218b6dcdf6bf7a3c85b61c1721c4250"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/MohmmedAshraf/blade-flags/zipball/433a9b0c9218b6dcdf6bf7a3c85b61c1721c4250",
+                "reference": "433a9b0c9218b6dcdf6bf7a3c85b61c1721c4250",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-icons": "^1.1",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+                "php": "^7.4|^8.0|^8.1|^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0",
+                "phpunit/phpunit": "^9.0|^10.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "OutheBox\\BladeFlags\\BladeFlagsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "OutheBox\\BladeFlags\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mohamed Ashraf",
+                    "email": "cupo.ashraf@gmail.com",
+                    "homepage": "https://github.com/MohmmedAshraf"
+                }
+            ],
+            "description": "A package to easily make use of country & language flags in your Laravel Blade views.",
+            "homepage": "https://github.com/MohmmedAshraf/blade-flags",
+            "keywords": [
+                "blade",
+                "country flags",
+                "flags",
+                "language flags",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/MohmmedAshraf/blade-flags/issues",
+                "source": "https://github.com/MohmmedAshraf/blade-flags/tree/1.5.2"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/MohmmedAshraf",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-12-26T05:32:26+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -10312,12 +10455,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
