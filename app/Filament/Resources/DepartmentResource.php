@@ -115,9 +115,9 @@ class DepartmentResource extends Resource
                                 User::where('department_id', $record->id)
                                     ->whereNotIn('id', $selectedIds)
                                     ->chunkById(1000, function ($users) {
-                                        $ids = $users->pluck('id'); // Get the IDs in the current chunk
+                                        $ids = $users->pluck('id');
                                         User::whereIn('id', $ids)
-                                            ->update(['department_id' => null]); // Batch update for the chunk
+                                            ->update(['department_id' => null]);
                                     });
                             })
                     ]),

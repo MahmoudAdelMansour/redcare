@@ -13,7 +13,7 @@ class AdminSeeder extends Seeder
             'name' => 'Admin',
             'email' => 'admin@test.com',
             'password' => bcrypt('password'),
-            'role' => User::ROLES['admin'],
+            'role' => 'admin',
             'status' => User::STATUS['active'],
 
         ]);
