@@ -37,6 +37,7 @@ use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DepartmentResource extends Resource
@@ -99,8 +100,19 @@ class DepartmentResource extends Resource
                                 fn(Select $select, Department $record, $state) => filled($state) ?: $select->state($record->users->pluck('id'))
                             )
                             ->options(
-                                User::all()->pluck('name', 'id')
+                                Department::all()
+                                    ->mapWithKeys(fn($department) => [
+                                        $department->name =>
+                                            $department->users->mapWithKeys(fn($user) => [
+                                                $user->id =>
+                                                    '<img src='.$user->avatar().' class="rounded-full w-6 h-6 mr-2 inline-block" />'.
+                                                    "<span class='inline-block ml-2 mr-2'>&nbsp;{$user->name}</span>".
+                                                    "<span class='inline-block text-xs text-gray-500'>&nbsp;{$department->name}</span>"
+
+                                            ])
+                                    ])
                             )
+                            ->allowHtml()
                             ->searchable(['name', 'email'])
 
                             ->saveRelationshipsUsing(function ($record, $state) {
@@ -171,6 +183,7 @@ class DepartmentResource extends Resource
                                     'style' => 'object-fit: cover; border-radius: 10px;',
                                 ]
                             )
+                            ->tooltip(fn($record) => $record->name)
                             ->alignment('center')
                         ,
                         TextColumn::make('name')
@@ -188,6 +201,7 @@ class DepartmentResource extends Resource
                             ->limit(4)
                             ->alignment('center')
                             ->alignment('center')
+                            ->tooltip(fn($record) => $record->users->pluck('name')->join(', ')),
 
                     ]),
                         TextColumn::make('description')
@@ -256,7 +270,21 @@ class DepartmentResource extends Resource
         return ['name'];
     }
 
-    public static function canAccess(): bool
+    public static function canCreate(): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canEdit(Model $record): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canDelete(Model $record): bool
     {
         if(auth()->user()->role == 'employee') {
             return false;

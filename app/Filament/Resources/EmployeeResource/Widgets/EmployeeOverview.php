@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Resources\EmployeeResource\Widgets;
 
 use App\Models\Department;
 use App\Models\File;
@@ -10,6 +10,10 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class EmployeeOverview extends BaseWidget
 {
+    public static function canView(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
 
     protected function getStats(): array
     {

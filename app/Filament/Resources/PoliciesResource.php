@@ -84,10 +84,25 @@ class PoliciesResource extends Resource
                     ->icon('heroicon-m-user-group')
                     ->schema([
                         Select::make('user_id')
-                            ->label('Users')
+                            ->label('User')
                             ->relationship('user', 'name')
+                            ->preload()
+                            ->native(false)
+                            ->options(
+                                Department::all()
+                                    ->mapWithKeys(fn($department) => [
+                                        $department->name =>
+                                            $department->users->mapWithKeys(fn($user) => [
+                                                $user->id =>
+                                                    '<img src='.$user->avatar().' class="rounded-full w-6 h-6 mr-2 inline-block" />'.
+                                                    "<span class='inline-block ml-2 mr-2'>&nbsp;{$user->name}</span>".
+                                                    "<span class='inline-block text-xs text-gray-500'>&nbsp;{$department->name}</span>"
+
+                                            ])
+                                    ]))
+                            ->allowHtml(),
                     ]),
-                Section::make('Policy Officer')
+                Section::make('Policy Departments')
                     ->columns(1)
                     ->icon('heroicon-m-building-office')
                     ->schema([
@@ -105,7 +120,7 @@ class PoliciesResource extends Resource
                     ->schema([
                         Select::make('status')
                             ->options([
-                                'activity' => 'Activity',
+                                'active' => 'active',
                                 'disabled' => 'Disabled',
                                 'under_review' => 'Under review',
                             ]),
@@ -156,6 +171,7 @@ class PoliciesResource extends Resource
                     ->limit(3)
                     ->limitedRemainingText()
                     ->stacked()
+                    ->tooltip(fn($record) => $record->departments->pluck('name')->join(', '))
                 ->default('https://icon-library.com/images/none-icon/none-icon-0.jpg')
                 ,
                 ImageColumn::make('attachment')
@@ -181,9 +197,24 @@ class PoliciesResource extends Resource
                     ->color('primary')
                 ,
 
-                Tables\Columns\ToggleColumn::make('status'),
-                Tables\Columns\ToggleColumn::make('approval'),
-                TextColumn::make('created_at'),
+                Tables\Columns\SelectColumn::make('status')
+                    ->options([
+                        'active' => 'Active',
+                        'disabled' => 'Disabled',
+                        'under_review' => 'Under review',
+                    ])
+                    ->disabled(fn() => auth()->user()->role == 'employee')
+                ,
+                Tables\Columns\SelectColumn::make('approval')
+                    ->options([
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->disabled(fn() => auth()->user()->role == 'employee')
+                ,
+                TextColumn::make('created_at')
+                ->visible(fn() => auth()->user()->role == 'admin')
+                ,
 
             ])
             ->filters([
@@ -208,6 +239,7 @@ class PoliciesResource extends Resource
                     DeleteAction::make(),
                     RestoreAction::make(),
                     ForceDeleteAction::make(),
+                    Tables\Actions\ViewAction::make()
                 ])
 
             ])
@@ -217,7 +249,8 @@ class PoliciesResource extends Resource
                     RestoreBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ;
     }
 
     public static function getRelations(): array
@@ -245,6 +278,27 @@ class PoliciesResource extends Resource
         'version',
         'details',
     ];
+    }
+    public static function canCreate(): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canEdit(Model $record): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canDelete(Model $record): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
     }
 
 

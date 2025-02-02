@@ -2,7 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\EmployeeResource\Widgets\EmployeeOverview;
 use App\Filament\Resources\EmployeeResource\Widgets\LatestEmployees;
+use App\Filament\Resources\EmployeeResource\Widgets\UserOverview;
 use App\Filament\Resources\PoliciesResource\Widgets\PolicyDepartmentChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -29,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->profile()
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -42,9 +45,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'),
                 for: 'App\\Filament\\Widgets')
             ->widgets([
-
+                UserOverview::make(),
                 LatestEmployees::make(),
-                PolicyDepartmentChart::make()
+                PolicyDepartmentChart::make(),
+                EmployeeOverview::make()
                 ,
 
             ])

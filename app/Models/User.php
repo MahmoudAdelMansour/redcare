@@ -84,6 +84,13 @@ class User extends Authenticatable
         return $this->belongsTo(Shift::class);
     }
 
+    public function avatar()
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) :
+            'https://ui-avatars.com/api/?name='.substr($this->name,0,2) .'&color=7F9CF5&background=EBF4FF&bold=true';
+
+    }
+
 
 
 }

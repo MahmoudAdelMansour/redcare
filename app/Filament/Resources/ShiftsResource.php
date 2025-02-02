@@ -8,7 +8,9 @@ use App\Models\Shift;
 use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +18,7 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -24,6 +27,7 @@ use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\RestoreBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -72,8 +76,19 @@ class ShiftsResource extends Resource
                                     $select->state($record->users->pluck('id'))
                             )
                             ->options(
-                                User::all()->pluck('name', 'id')
+                                Department::all()
+                                    ->mapWithKeys(fn($department) => [
+                                        $department->name =>
+                                            $department->users->mapWithKeys(fn($user) => [
+                                                $user->id =>
+                                                    '<img src='.$user->avatar().' class="rounded-full w-6 h-6 mr-2 inline-block" />'.
+                                                    "<span class='inline-block ml-2 mr-2'>&nbsp;{$user->name}</span>".
+                                                    "<span class='inline-block text-xs text-gray-500'>&nbsp;{$department->name}</span>"
+
+                                            ])
+                                    ])
                             )
+                            ->allowHtml()
                             ->searchable(['name', 'email'])
 
                             ->saveRelationshipsUsing(function ($record, $state) {
@@ -94,13 +109,18 @@ class ShiftsResource extends Resource
                                         User::whereIn('id', $ids)
                                             ->update(['shift_id' => null]); // Batch update for the chunk
                                     });
-                            })
+
+                            }),
                     ]),
-                Toggle::make('status'),
+                Toggle::make('status')
+                ->columnSpanFull()
+                ,
 
                 Placeholder::make('created_at')
                     ->label('Created Date')
-                    ->content(fn(?Shift $record): string => $record?->created_at?->diffForHumans() ?? '-'),
+                    ->content(fn(?Shift $record): string => $record?->created_at?->diffForHumans() ?? '-')
+
+                ,
 
                 Placeholder::make('updated_at')
                     ->label('Last Modified Date')
@@ -128,16 +148,21 @@ class ShiftsResource extends Resource
                     ->stacked(),
 
 
-                ToggleColumn::make('status'),
+                ToggleColumn::make('status')
+                ->visible(fn() => auth()->user()->role == 'admin')
+                ,
             ])
             ->filters([
                 TrashedFilter::make(),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    RestoreAction::make(),
+                    ForceDeleteAction::make(),
+                    ViewAction::make()
+                ])
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -154,6 +179,7 @@ class ShiftsResource extends Resource
             'index' => Pages\ListShifts::route('/'),
             'create' => Pages\CreateShifts::route('/create'),
             'edit' => Pages\EditShifts::route('/{record}/edit'),
+
         ];
     }
 
@@ -177,11 +203,29 @@ class ShiftsResource extends Resource
 
 
 
-    public static function canAccess(): bool
+    public static function canCreate(): bool
     {
         if(auth()->user()->role == 'employee') {
             return false;
         }
+        return true;
+    }
+    public static function canEdit(Model $record): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canDelete(Model $record): bool
+    {
+        if(auth()->user()->role == 'employee') {
+            return false;
+        }
+        return true;
+    }
+    public static function canView(Model $record): bool
+    {
         return true;
     }
 }

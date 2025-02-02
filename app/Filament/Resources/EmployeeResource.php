@@ -222,4 +222,8 @@ class EmployeeResource extends Resource
     {
         return ['name', 'email'];
     }
+    public static function canAccess(): bool
+    {
+        return auth()->user()->role !== 'employee';
+    }
 }

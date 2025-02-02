@@ -11,6 +11,7 @@ class LatestEmployees extends BaseWidget
 {
 
     protected static ?int $sort = 10;
+
     public function table(Table $table): Table
     {
         return $table
