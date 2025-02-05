@@ -51,7 +51,7 @@ class PoliciesResource extends Resource
                 Section::make('Policy Data')
                     ->schema([
                     TextInput::make('policy_name'),
-                    TextInput::make('police_number')
+                    TextInput::make('policy_number')
                         ->numeric(),
                     Textarea::make('description'),
                     ])
@@ -78,6 +78,7 @@ class PoliciesResource extends Resource
                     ])
                     ->icon('heroicon-o-document-text'),
                 Section::make('Assignation')
+                    ->visible(fn() => auth()->user()->role == 'admin')
             ->schema([
                 Section::make('Policy Officer')
                     ->columns(1)
@@ -100,8 +101,14 @@ class PoliciesResource extends Resource
 
                                             ])
                                     ]))
-                            ->allowHtml(),
-                    ]),
+                            ->allowHtml()
+                        ->required()
+                        ,
+                    ])
+                    ->visible(
+                        fn() => auth()->user()->role == 'admin'
+                    )
+                ,
                 Section::make('Policy Departments')
                     ->columns(1)
                     ->icon('heroicon-m-building-office')
@@ -111,7 +118,11 @@ class PoliciesResource extends Resource
                             ->relationship('departments', 'name')
                             ->multiple()
                             ->preload()
-                    ]),
+                            ->visible(fn() => auth()->user()->role == 'admin')
+                        ->required()
+                    ])
+
+                ,
                     ])
                 ->icon('heroicon-o-users')
                 ->columns(2)
@@ -158,7 +169,9 @@ class PoliciesResource extends Resource
             ->columns([
 
                 TextColumn::make('policy_name'),
-                TextColumn::make('police_number'),
+                TextColumn::make('policy_number')
+                ->default('N/A')
+                ,
                 TextColumn::make('description')
                 ->words(4),
                 ImageColumn::make('user.avatar')
@@ -172,7 +185,7 @@ class PoliciesResource extends Resource
                     ->limitedRemainingText()
                     ->stacked()
                     ->tooltip(fn($record) => $record->departments->pluck('name')->join(', '))
-                ->default('https://icon-library.com/images/none-icon/none-icon-0.jpg')
+                   ->default('https://ui-avatars.com/api/?background=282828&color=ffff&name=NA')
                 ,
                 ImageColumn::make('attachment')
                     ->stacked()
@@ -180,7 +193,7 @@ class PoliciesResource extends Resource
                     ->getStateUsing(function ($record) {
                         return $record->attachment ? 'https://imgs.search.brave.com/XnZs0OSUPTIm7GR1SoOVW666qHxXrPiMyhAGatwQ444/rs:fit:500:0:0:0/g:ce/aHR0cDovL3d3dy5j/bGtlci5jb20vY2xp/cGFydHMvZi9ILzUv/YS9RL3kvdGV4dC1m/aWxlLWljb24tdGgu/cG5n'
                             :
-                            'https://icon-library.com/images/none-icon/none-icon-0.jpg';
+                            'https://ui-avatars.com/api/?background=282828&color=ffff&name=NA';
                     })
                     ->url(fn($record) => asset('storage/'.$record->attachment))
                     ->openUrlInNewTab()
@@ -203,14 +216,20 @@ class PoliciesResource extends Resource
                         'disabled' => 'Disabled',
                         'under_review' => 'Under review',
                     ])
-                    ->disabled(fn() => auth()->user()->role == 'employee')
+                    ->placeholder('Not Set')
+                    ->disabled(
+                        fn(Model $record) => auth()->user()->role == 'employee' || $record->user_id !== auth()->id()
+                    )
                 ,
                 Tables\Columns\SelectColumn::make('approval')
                     ->options([
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ])
-                    ->disabled(fn() => auth()->user()->role == 'employee')
+                    ->placeholder('Not Set')
+                    ->disabled(
+                        fn(Model $record) => auth()->user()->role == 'employee' || $record->user_id !== auth()->id()
+                    )
                 ,
                 TextColumn::make('created_at')
                 ->visible(fn() => auth()->user()->role == 'admin')
@@ -230,6 +249,7 @@ class PoliciesResource extends Resource
                 Filter::make('has_link')
                     ->query(fn (Builder $query):Builder => $query->whereNotNull('link'))
                 ->label('Has Link'),
+
 
             ])
             ->searchable()
@@ -266,6 +286,7 @@ class PoliciesResource extends Resource
             'index' => Pages\ListPolicies::route('/'),
             'create' => Pages\CreatePolicies::route('/create'),
             'edit' => Pages\EditPolicies::route('/{record}/edit'),
+//            'view' => Pages\ViewPolicies::route('/{record}'),
         ];
     }
     public static function getGloballySearchableAttributes(): array
@@ -291,6 +312,9 @@ class PoliciesResource extends Resource
         if(auth()->user()->role == 'employee') {
             return false;
         }
+        if (auth()->user()->role == 'manager') {
+            return $record->user_id == auth()->id();
+        }
         return true;
     }
     public static function canDelete(Model $record): bool
@@ -300,6 +324,31 @@ class PoliciesResource extends Resource
         }
         return true;
     }
+    public static function getEloquentQuery(): Builder
+    {
+//        if( auth()->user()->role == 'employee') {
+//            return parent::getEloquentQuery()
+//                ->whereHas('departments', function ($query) {
+//                    $query->where('department_id', auth()->user()->department_id);
+//                })
+//                ->withoutGlobalScopes([
+//                    SoftDeletingScope::class,
+//                ]);
+//        } elseif (auth()->user()->role == 'manager') {
+//            return parent::getEloquentQuery()
+//                ->where('user_id', auth()->id())
+//                ->withoutGlobalScopes([
+//                    SoftDeletingScope::class,
+//                ]);
+//        }
+
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
+
+
 
 
 }

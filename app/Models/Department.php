@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ class Department extends Model
         'goals',
         'main_responsibilities',
 
+
     ];
 
     public function users(): HasMany
@@ -37,6 +39,14 @@ class Department extends Model
     public function policies(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Policies::class, 'policy_department');
+    }
+
+    public function avatar():Attribute
+    {
+        return Attribute::make(
+            get: fn ( string $value) => $value ? $value :  'https://ui-avatars.com/api/?background=282828&color=ffff&name=NA'
+        );
+
     }
 
 

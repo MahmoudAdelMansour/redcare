@@ -138,10 +138,17 @@ class DepartmentResource extends Resource
                 Section::make('Policies')
                     ->schema([
                         CheckboxList::make('policies')
-                            ->relationship('policies', 'policy_name')
+                            ->relationship(
+                                titleAttribute: 'policy_name',
+                                modifyQueryUsing: fn($query) =>
+                                auth()->user()->role == 'employee' || auth()->user()->role == 'manager' ?
+                                    $query->where('user_id', auth()->id()) :
+                                    $query
+                            )
 
                             ->descriptions(
-                                Policies::all()->pluck('description', 'id')
+                                Policies::where('user_id', auth()->id())
+                                    ->pluck('description', 'id')
                             )
                             ->bulkToggleable()
                         ->columns(3)
@@ -259,6 +266,7 @@ class DepartmentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
@@ -291,5 +299,6 @@ class DepartmentResource extends Resource
         }
         return true;
     }
+
 
 }
